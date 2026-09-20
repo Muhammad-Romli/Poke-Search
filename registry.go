@@ -8,13 +8,13 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(*config) error
 }
 
-var AllCommand = map[string]cliCommand{}
+var AllCommands = map[string]cliCommand{}
 
 func init() {
-	AllCommand = map[string]cliCommand{
+	AllCommands = map[string]cliCommand{
 		"exit": {
 			name:        "exit",
 			description: "Exit the Pokedex",
@@ -28,13 +28,13 @@ func init() {
 	}
 }
 
-func commandExit() error {
+func commandExit(configP *config) error {
 	fmt.Printf("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp() error {
+func commandHelp(configP *config) error {
 	fmt.Printf(`
 =================================
 Welcome to the Pokedex!
@@ -42,7 +42,7 @@ Usage:
 
 `)
 
-	for commandName, commandStruct := range AllCommand {
+	for commandName, commandStruct := range AllCommands {
 		fmt.Printf("%s: %s\n", commandName, commandStruct.description)
 	}
 	fmt.Println("\n=================================")

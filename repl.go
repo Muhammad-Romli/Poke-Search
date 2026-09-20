@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func main() {
+func startRepl(configP *config) error {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
@@ -17,9 +17,9 @@ func main() {
 		input := scanner.Text()
 		finishedFirstWord := cleanInput(input)[0]
 
-		for commandName, commandStruct := range AllCommand {
+		for commandName, commandStruct := range AllCommands {
 			if finishedFirstWord == commandName {
-				if err := commandStruct.callback(); err != nil {
+				if err := commandStruct.callback(configP); err != nil {
 					fmt.Println("Error running the command: %w", err)
 					os.Exit(0)
 				}
@@ -29,5 +29,7 @@ func main() {
 
 	if err := scanner.Err(); err != nil {
 		fmt.Println(fmt.Errorf("failed reading scan: %w\n", err))
+		return fmt.Errorf("failed reading scan: %w\n", err)
 	}
+	return nil
 }
