@@ -1,0 +1,43 @@
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Environment / Secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+
+# --- Go ---
+bin/
+*.exe
+*.test
+*.out
+vendor/
+
+# --- Logs / Temp ---
+*.log
+tmp/
+*.tmp
+
+# --- Databases (local) ---
+*.sqlite3
+*.db
