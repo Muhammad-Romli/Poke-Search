@@ -29,7 +29,7 @@ func init() {
 }
 
 func commandExit() error {
-	fmt.Printf("losing the Pokedex... Goodbye!")
+	fmt.Printf("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
@@ -39,12 +39,13 @@ func commandHelp() error {
 =================================
 Welcome to the Pokedex!
 Usage:
+
 `)
 
 	for commandName, commandStruct := range AllCommand {
-		fmt.Printf("%s: %s", commandName, commandStruct.description)
+		fmt.Printf("%s: %s\n", commandName, commandStruct.description)
 	}
-	fmt.Println("=================================")
+	fmt.Println("\n=================================")
 
 	return nil
 }

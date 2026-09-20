@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -16,9 +15,7 @@ func main() {
 		}
 
 		input := scanner.Text()
-		firstWord := getFirstWord(input)
-		trimmedFirstWord := strings.Trim(firstWord, " ")
-		finishedFirstWord := strings.ToLower(trimmedFirstWord)
+		finishedFirstWord := cleanInput(input)[0]
 
 		for commandName, commandStruct := range AllCommand {
 			if finishedFirstWord == commandName {
@@ -31,15 +28,6 @@ func main() {
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Println(fmt.Errorf("failed reading scan: %w", err))
+		fmt.Println(fmt.Errorf("failed reading scan: %w\n", err))
 	}
-}
-
-func getFirstWord(s string) string {
-	for i := range s {
-		if s[i] == ' ' {
-			return s[:i]
-		}
-	}
-	return s
 }
