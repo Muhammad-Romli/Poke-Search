@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -16,7 +17,17 @@ func main() {
 
 		input := scanner.Text()
 		firstWord := getFirstWord(input)
-		fmt.Printf("Your command was: %s\n", firstWord)
+		trimmedFirstWord := strings.Trim(firstWord, " ")
+		finishedFirstWord := strings.ToLower(trimmedFirstWord)
+
+		for commandName, commandStruct := range AllCommand {
+			if finishedFirstWord == commandName {
+				if err := commandStruct.callback(); err != nil {
+					fmt.Printf("Error running the command: %w", err)
+					os.Exit(0)
+				}
+			}
+		}
 	}
 
 	if err := scanner.Err(); err != nil {
