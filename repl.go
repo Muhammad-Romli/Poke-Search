@@ -23,7 +23,7 @@ func main() {
 		for commandName, commandStruct := range AllCommand {
 			if finishedFirstWord == commandName {
 				if err := commandStruct.callback(); err != nil {
-					fmt.Printf("Error running the command: %w", err)
+					fmt.Println("Error running the command: %w", err)
 					os.Exit(0)
 				}
 			}
