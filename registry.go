@@ -67,22 +67,14 @@ type LocationAreaResponse struct {
 	} `json:"results"`
 }
 
-func commandMap(configP *config) error {
-	var locStruct LocationAreaResponse
-
-	page := 1
-	shown := 20
-	query := fmt.Sprintf("?limit=%d&offset=%d", shown, page*shown)
-	url := "https://pokeapi.co/api/v2/location-area/"
-	fullUrl := fmt.Sprintf("%s%s", url, query)
-
+func getRequest(fullUrl string, locStruct *LocationAreaResponse) error {
 	resp, err := http.Get(fullUrl)
 	if err != nil {
 		return fmt.Errorf("error making get request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 299 {
+	if resp.StatusCode > 299 {
 		return fmt.Errorf("Response failed with status code: %d and\n body: %s\n", resp.StatusCode, resp.Body)
 	}
 
@@ -92,9 +84,29 @@ func commandMap(configP *config) error {
 	return nil
 }
 
-func commandMapB(page int, fullUrl string) error {
-	if page == 1 {
+func commandMap(configP *config) error {
+	var locStruct LocationAreaResponse
+
+	page := 1
+	shown := 20
+	query := fmt.Sprintf("?limit=%d&offset=%d", shown, page*shown)
+	url := "https://pokeapi.co/api/v2/location-area/"
+	fullUrl := fmt.Sprintf("%s%s", url, query)
+
+	getRequest(fullUrl, &locStruct)
+	return nil
+}
+
+func commandMapB(page int, shown int, baseUrl string) error {
+	var locStruct LocationAreaResponse
+	if page <= 1 {
 		return fmt.Errorf("You are on the first page you can't go back")
 	}
+	current := page * shown
+	beforePage := current - shown
+	query := fmt.Sprintf("?limit=%d&offset=%d", shown, beforePage)
+	fullUrl := fmt.Sprintf("%s%s", baseUrl, query)
+
+	getRequest(fullUrl, &locStruct)
 	return nil
 }
