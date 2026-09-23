@@ -111,13 +111,18 @@ func commandMap(configP *config) error {
 	}
 	configP.Next = locStruct.Next
 	configP.Previous = locStruct.Previous
+
+	for _, result := range locStruct.Results {
+		fmt.Println(result.Name)
+	}
 	return nil
 }
 
 func commandMapB(configP *config) error {
 	var locStruct LocationAreaResponse
 	if configP.Previous == "" {
-		return fmt.Errorf("You are on the first page you can't go back")
+		fmt.Printf("You are on the first page you can't go back")
+		return nil
 	}
 	err := getRequest(configP.Previous, &locStruct)
 	if err != nil {
@@ -125,5 +130,9 @@ func commandMapB(configP *config) error {
 	}
 	configP.Next = locStruct.Next
 	configP.Previous = locStruct.Previous
+
+	for _, result := range locStruct.Results {
+		fmt.Println(result.Name)
+	}
 	return nil
 }

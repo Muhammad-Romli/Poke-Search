@@ -17,13 +17,19 @@ func startRepl(configP *config) error {
 		input := scanner.Text()
 		finishedFirstWord := cleanInput(input)[0]
 
+		found := false
 		for commandName, commandStruct := range AllCommands {
 			if finishedFirstWord == commandName {
 				if err := commandStruct.callback(configP); err != nil {
 					fmt.Println("Error running the command: %w", err)
 					os.Exit(0)
 				}
+				found = true
+				break
 			}
+		}
+		if found == false {
+			fmt.Println("command not found, try type 'help' to see list of commands")
 		}
 	}
 
