@@ -29,8 +29,13 @@ func init() {
 		},
 		"map": {
 			name:        "map",
-			description: "Get 20 location areas in the Pokemon world.",
+			description: "Get 20 location areas in the Pokemon world. call it again to move to the next page.",
 			callback:    commandMap,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Move to previous 20 location areas page",
+			callback:    commandMapB,
 		},
 	}
 }
@@ -75,10 +80,11 @@ func getRequest(fullUrl string, locStruct *LocationAreaResponse) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode > 299 {
-		return fmt.Errorf("Response failed with status code: %d and\n body: %s\n", resp.StatusCode, resp.Body)
+		return fmt.Errorf("Response failed with status code: %d", resp.StatusCode)
 	}
 
-	if err = json.NewDecoder(resp.Body).Decode(&locStruct); err != nil {
+	err = json.NewDecoder(resp.Body).Decode(locStruct)
+	if err != nil {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
 	return nil
@@ -86,27 +92,38 @@ func getRequest(fullUrl string, locStruct *LocationAreaResponse) error {
 
 func commandMap(configP *config) error {
 	var locStruct LocationAreaResponse
+	fullUrl := ""
 
-	page := 1
-	shown := 20
-	query := fmt.Sprintf("?limit=%d&offset=%d", shown, page*shown)
-	url := "https://pokeapi.co/api/v2/location-area/"
-	fullUrl := fmt.Sprintf("%s%s", url, query)
+	if configP.Next == "" {
+		page := 1
+		shown := 20
+		total := (page * shown) - shown
+		query := fmt.Sprintf("?limit=%d&offset=%d", shown, total)
+		url := "https://pokeapi.co/api/v2/location-area/"
+		fullUrl = fmt.Sprintf("%s%s", url, query)
+	} else {
+		fullUrl = configP.Next
+	}
 
-	getRequest(fullUrl, &locStruct)
+	err := getRequest(fullUrl, &locStruct)
+	if err != nil {
+		return fmt.Errorf("failed to make request: %w", err)
+	}
+	configP.Next = locStruct.Next
+	configP.Previous = locStruct.Previous
 	return nil
 }
 
-func commandMapB(page int, shown int, baseUrl string) error {
+func commandMapB(configP *config) error {
 	var locStruct LocationAreaResponse
-	if page <= 1 {
+	if configP.Previous == "" {
 		return fmt.Errorf("You are on the first page you can't go back")
 	}
-	current := page * shown
-	beforePage := current - shown
-	query := fmt.Sprintf("?limit=%d&offset=%d", shown, beforePage)
-	fullUrl := fmt.Sprintf("%s%s", baseUrl, query)
-
-	getRequest(fullUrl, &locStruct)
+	err := getRequest(configP.Previous, &locStruct)
+	if err != nil {
+		return fmt.Errorf("failed to make request: %w", err)
+	}
+	configP.Next = locStruct.Next
+	configP.Previous = locStruct.Previous
 	return nil
 }
