@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 )
@@ -72,8 +73,17 @@ type LocationAreaResponse struct {
 	} `json:"results"`
 }
 
-func getRequest(fullUrl string, locStruct *LocationAreaResponse) error {
+func getRequest(fullUrl string, locStruct *LocationAreaResponse, config *config) error {
+	val, ok := config.cache.Get(fullUrl)
+	if ok {
+		if err := json.Unmarshal(val, locStruct); err != nil {
+			return fmt.Errorf("failed unmarshaling cached data: %w", err)
+		}
+		return nil
+	}
+
 	resp, err := http.Get(fullUrl)
+
 	if err != nil {
 		return fmt.Errorf("error making get request: %w", err)
 	}
@@ -83,10 +93,14 @@ func getRequest(fullUrl string, locStruct *LocationAreaResponse) error {
 		return fmt.Errorf("Response failed with status code: %d", resp.StatusCode)
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(locStruct)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("failed to decode response: %w", err)
+		return fmt.Errorf("failed to reading response: %w", err)
 	}
+	if err = json.Unmarshal(data, locStruct); err != nil {
+		return fmt.Errorf("failed unmarshaling data, data not cached yet: %w", err)
+	}
+	config.cache.Add(fullUrl, data)
 	return nil
 }
 
@@ -105,7 +119,7 @@ func commandMap(configP *config) error {
 		fullUrl = configP.Next
 	}
 
-	err := getRequest(fullUrl, &locStruct)
+	err := getRequest(fullUrl, &locStruct, configP)
 	if err != nil {
 		return fmt.Errorf("failed to make request: %w", err)
 	}
@@ -124,7 +138,7 @@ func commandMapB(configP *config) error {
 		fmt.Printf("You are on the first page you can't go back")
 		return nil
 	}
-	err := getRequest(configP.Previous, &locStruct)
+	err := getRequest(configP.Previous, &locStruct, configP)
 	if err != nil {
 		return fmt.Errorf("failed to make request: %w", err)
 	}
