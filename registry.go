@@ -11,7 +11,7 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, string) error
 }
 
 var AllCommands = map[string]cliCommand{}
@@ -41,13 +41,13 @@ func init() {
 	}
 }
 
-func commandExit(configP *config) error {
+func commandExit(configP *config, additional string) error {
 	fmt.Printf("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(configP *config) error {
+func commandHelp(configP *config, additional string) error {
 	fmt.Printf(`
 =================================
 Welcome to the Pokedex!
@@ -104,7 +104,7 @@ func getRequest(fullUrl string, locStruct *LocationAreaResponse, config *config)
 	return nil
 }
 
-func commandMap(configP *config) error {
+func commandMap(configP *config, additional string) error {
 	var locStruct LocationAreaResponse
 	fullUrl := ""
 
@@ -132,7 +132,7 @@ func commandMap(configP *config) error {
 	return nil
 }
 
-func commandMapB(configP *config) error {
+func commandMapB(configP *config, additional string) error {
 	var locStruct LocationAreaResponse
 	if configP.Previous == "" {
 		fmt.Printf("You are on the first page you can't go back")

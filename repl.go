@@ -16,11 +16,12 @@ func startRepl(configP *config) error {
 
 		input := scanner.Text()
 		finishedFirstWord := cleanInput(input)[0]
+		finishedSecondWord := cleanInput(input)[1]
 
 		found := false
 		for commandName, commandStruct := range AllCommands {
 			if finishedFirstWord == commandName {
-				if err := commandStruct.callback(configP); err != nil {
+				if err := commandStruct.callback(configP, finishedSecondWord); err != nil {
 					fmt.Println("Error running the command: %w", err)
 					os.Exit(0)
 				}
