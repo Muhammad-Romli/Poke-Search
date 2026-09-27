@@ -54,6 +54,11 @@ func init() {
 			description: "Inspect pokemon you already caught",
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "See every pokemon you have caught",
+			callback:    commandPokedex,
+		},
 	}
 }
 
@@ -266,6 +271,7 @@ func commandCatch(configP *config, additional string) error {
 	rolled := rand.IntN(baseChance)
 	if rolled < totalChance {
 		fmt.Printf("%s was caught!\n", pokeStruct.Name)
+		configP.pokemonsCaught = append(configP.pokemonsCaught, pokeStruct.Name)
 	} else {
 		fmt.Printf("%s escaped!\n", pokeStruct.Name)
 	}
@@ -305,5 +311,16 @@ Weight: %d
 		fmt.Printf("  - %s\n", t.Type.Name)
 	}
 
+	return nil
+}
+
+func commandPokedex(configP *config, additional string) error {
+	if len(configP.pokemonsCaught) == 0 {
+		fmt.Println("You haven't caught any pokemons")
+		return nil
+	}
+	for _, pokemon := range configP.pokemonsCaught {
+		fmt.Println(pokemon)
+	}
 	return nil
 }

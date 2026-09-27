@@ -7,10 +7,11 @@ import (
 )
 
 type config struct {
-	cache    pokecache.Cache
-	commands map[string]cliCommand
-	Next     string
-	Previous string
+	cache          pokecache.Cache
+	commands       map[string]cliCommand
+	pokemonsCaught []string
+	Next           string
+	Previous       string
 }
 
 func main() {
