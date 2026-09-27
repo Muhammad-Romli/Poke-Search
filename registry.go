@@ -90,8 +90,38 @@ type LocationAreaDetailstruct struct {
 }
 
 type PokemonDetailStruct struct {
+	ID             int    `json:"id"`
 	Name           string `json:"name"`
 	BaseExperience int    `json:"base_experience"`
+	Height         int    `json:"height"`
+	Order          int    `json:"order"`
+	Weight         int    `json:"weight"`
+
+	Abilities []struct {
+		IsHidden bool `json:"is_hidden"`
+		Slot     int  `json:"slot"`
+		Ability  struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"ability"`
+	} `json:"abilities"`
+
+	Stats []struct {
+		BaseStat int `json:"base_stat"`
+		Effort   int `json:"effort"`
+		Stat     struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"stat"`
+	} `json:"stats"`
+
+	Types []struct {
+		Slot int `json:"slot"`
+		Type struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"type"`
+	} `json:"types"`
 }
 
 type NamedAPIResource struct {
@@ -103,15 +133,25 @@ type PokemonEncounter struct {
 	Pokemon NamedAPIResource `json:"pokemon"`
 }
 
-func getRequest[T any](fullUrl string, locStruct *T, config *config) error {
-	val, ok := config.cache.Get(fullUrl)
-	if ok {
-		if err := json.Unmarshal(val, locStruct); err != nil {
-			return fmt.Errorf("failed unmarshaling cached data: %w", err)
-		}
+func getCachedData[T any](fullUrl string, dataStruct *T, configP *config) (bool, error) {
+	val, ok := configP.cache.Get(fullUrl)
+	if !ok {
+		return false, nil
+	}
+	if err := json.Unmarshal(val, dataStruct); err != nil {
+		return true, fmt.Errorf("failed unmarshal cached data: %w", err)
+	}
+	return true, nil
+}
+
+func getRequest[T any](fullUrl string, dataStruct *T, configP *config) error {
+	exist, err := getCachedData(fullUrl, dataStruct, configP)
+	if err != nil {
+		return err
+	}
+	if exist {
 		return nil
 	}
-
 	resp, err := http.Get(fullUrl)
 
 	if err != nil {
@@ -127,10 +167,10 @@ func getRequest[T any](fullUrl string, locStruct *T, config *config) error {
 	if err != nil {
 		return fmt.Errorf("failed to reading response: %w", err)
 	}
-	if err = json.Unmarshal(data, locStruct); err != nil {
+	if err = json.Unmarshal(data, dataStruct); err != nil {
 		return fmt.Errorf("failed unmarshaling data, data not cached yet: %w", err)
 	}
-	config.cache.Add(fullUrl, data)
+	configP.cache.Add(fullUrl, data)
 	return nil
 }
 
@@ -165,7 +205,8 @@ func commandMap(configP *config, additional string) error {
 func commandMapB(configP *config, additional string) error {
 	var locStruct LocationAreaList
 	if configP.Previous == "" {
-		fmt.Printf("You are on the first page you can't go back")
+		fmt.Printf("Error: You are on the first page you can't go back")
+		// This is intended, the prefix error just to warn user, but not kick the user from REPL
 		return nil
 	}
 	err := getRequest(configP.Previous, &locStruct, configP)
@@ -185,7 +226,8 @@ func commandExplore(configP *config, additional string) error {
 	var locDetailStruct LocationAreaDetailstruct
 	if additional == "" {
 		fmt.Printf("Error: You need to specify the location of the map after the command(e.g: explore <location-name> )\n")
-		// This is intended the prefix error just to warn user, but not kick the user from REPL
+		// This is intended, the prefix error just to warn user, but not kick the user from REPL
+		return nil
 	}
 	baseUrl := "https://pokeapi.co/api/v2/location-area/"
 	fullUrl := fmt.Sprintf("%s%s", baseUrl, additional)
@@ -203,7 +245,8 @@ func commandCatch(configP *config, additional string) error {
 	var pokeStruct PokemonDetailStruct
 	if additional == "" {
 		fmt.Printf("Error: You need to specify the pokemon name after the command(e.g: catch <pokemon-name> )\n")
-		// This is intended the prefix error just to warn user, but not kick the user from REPL
+		// This is intended, the prefix error just to warn user, but not kick the user from REPL
+		return nil
 	}
 	baseUrl := "https://pokeapi.co/api/v2/pokemon/"
 	fullUrl := fmt.Sprintf("%s%s", baseUrl, additional)
@@ -221,5 +264,40 @@ func commandCatch(configP *config, additional string) error {
 	} else {
 		fmt.Printf("%s escaped!\n", pokeStruct.Name)
 	}
+	return nil
+}
+
+func commandInspect(configP *config, additional string) error {
+	var pokeStruct PokemonDetailStruct
+	if additional == "" {
+		fmt.Printf("Error: You need to specify the pokemon name after the command(e.g: catch <pokemon-name> )\n")
+		// This is intended, the prefix error just to warn user, but not kick the user from REPL
+		return nil
+	}
+	baseUrl := "https://pokeapi.co/api/v2/pokemon/"
+	fullUrl := fmt.Sprintf("%s%s", baseUrl, additional)
+	exist, err := getCachedData(fullUrl, &pokeStruct, configP)
+	if err != nil {
+		return fmt.Errorf("Error when getting cached data for caught pokemon")
+	}
+	if !exist {
+		fmt.Printf("You haven't caught this pokemon yet recently")
+	}
+
+	fmt.Printf(`
+	Name: %s
+Height: %d
+Weight: %d
+`, pokeStruct.Name, pokeStruct.Height, pokeStruct.Weight)
+
+	fmt.Printf("Stats:")
+	for _, s := range pokeStruct.Stats {
+		fmt.Printf("  -%s: %d", s.Stat.Name, s.BaseStat)
+	}
+	fmt.Printf("Types:")
+	for _, t := range pokeStruct.Types {
+		fmt.Printf("  - %s", t.Type.Name)
+	}
+
 	return nil
 }
