@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand/v2"
 	"net/http"
 	"os"
 )
@@ -40,8 +41,13 @@ func init() {
 		},
 		"explore": {
 			name:        "explore",
-			description: "reveal all the pokemons in specified location",
+			description: "Reveal all the pokemons in specified location",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch",
+			description: "Throw a pokeball to try to catch specified pokemon",
+			callback:    commandCatch,
 		},
 	}
 }
@@ -81,6 +87,11 @@ type LocationAreaList struct {
 type LocationAreaDetailstruct struct {
 	ID                int                `json:"id"`
 	PokemonEncounters []PokemonEncounter `json:"pokemon_encounters"`
+}
+
+type PokemonDetailStruct struct {
+	Name           string `json:"name"`
+	BaseExperience int    `json:"base_experience"`
 }
 
 type NamedAPIResource struct {
@@ -173,7 +184,8 @@ func commandMapB(configP *config, additional string) error {
 func commandExplore(configP *config, additional string) error {
 	var locDetailStruct LocationAreaDetailstruct
 	if additional == "" {
-		fmt.Printf("Error: You need to specify the location of the map after the command(e.g: explore <location-name>)\n")
+		fmt.Printf("Error: You need to specify the location of the map after the command(e.g: explore <location-name> )\n")
+		// This is intended the prefix error just to warn user, but not kick the user from REPL
 	}
 	baseUrl := "https://pokeapi.co/api/v2/location-area/"
 	fullUrl := fmt.Sprintf("%s%s", baseUrl, additional)
@@ -183,6 +195,31 @@ func commandExplore(configP *config, additional string) error {
 
 	for _, pokemon := range locDetailStruct.PokemonEncounters {
 		fmt.Println(pokemon.Pokemon.Name)
+	}
+	return nil
+}
+
+func commandCatch(configP *config, additional string) error {
+	var pokeStruct PokemonDetailStruct
+	if additional == "" {
+		fmt.Printf("Error: You need to specify the pokemon name after the command(e.g: catch <pokemon-name> )\n")
+		// This is intended the prefix error just to warn user, but not kick the user from REPL
+	}
+	baseUrl := "https://pokeapi.co/api/v2/pokemon/"
+	fullUrl := fmt.Sprintf("%s%s", baseUrl, additional)
+	if err := getRequest(fullUrl, &pokeStruct, configP); err != nil {
+		return fmt.Errorf("failed when getting request: %w", err)
+	}
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokeStruct.Name)
+	// CATCH CHANCE
+	baseChance := 100
+	expChance := pokeStruct.BaseExperience / 10
+	totalChance := baseChance - expChance
+	rolled := rand.IntN(baseChance)
+	if rolled < totalChance {
+		fmt.Printf("%s was caught!\n", pokeStruct.Name)
+	} else {
+		fmt.Printf("%s escaped!\n", pokeStruct.Name)
 	}
 	return nil
 }
