@@ -38,6 +38,11 @@ func init() {
 			description: "Move to previous 20 location areas page",
 			callback:    commandMapB,
 		},
+		"explore": {
+			name:        "explore",
+			description: "reveal all the pokemons in specified location",
+			callback:    commandExplore,
+		},
 	}
 }
 
@@ -63,7 +68,7 @@ Usage:
 	return nil
 }
 
-type LocationAreaResponse struct {
+type LocationAreaList struct {
 	Count    int    `json:"count"`
 	Next     string `json:"next"`
 	Previous string `json:"previous"`
@@ -73,7 +78,21 @@ type LocationAreaResponse struct {
 	} `json:"results"`
 }
 
-func getRequest(fullUrl string, locStruct *LocationAreaResponse, config *config) error {
+type LocationAreaDetailstruct struct {
+	ID                int                `json:"id"`
+	PokemonEncounters []PokemonEncounter `json:"pokemon_encounters"`
+}
+
+type NamedAPIResource struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
+
+type PokemonEncounter struct {
+	Pokemon NamedAPIResource `json:"pokemon"`
+}
+
+func getRequest[T any](fullUrl string, locStruct *T, config *config) error {
 	val, ok := config.cache.Get(fullUrl)
 	if ok {
 		if err := json.Unmarshal(val, locStruct); err != nil {
@@ -105,7 +124,7 @@ func getRequest(fullUrl string, locStruct *LocationAreaResponse, config *config)
 }
 
 func commandMap(configP *config, additional string) error {
-	var locStruct LocationAreaResponse
+	var locStruct LocationAreaList
 	fullUrl := ""
 
 	if configP.Next == "" {
@@ -133,7 +152,7 @@ func commandMap(configP *config, additional string) error {
 }
 
 func commandMapB(configP *config, additional string) error {
-	var locStruct LocationAreaResponse
+	var locStruct LocationAreaList
 	if configP.Previous == "" {
 		fmt.Printf("You are on the first page you can't go back")
 		return nil
@@ -147,6 +166,23 @@ func commandMapB(configP *config, additional string) error {
 
 	for _, result := range locStruct.Results {
 		fmt.Println(result.Name)
+	}
+	return nil
+}
+
+func commandExplore(configP *config, additional string) error {
+	var locDetailStruct LocationAreaDetailstruct
+	if additional == "" {
+		fmt.Printf("Error: You need to specify the location of the map after the command(e.g: explore <location-name>)\n")
+	}
+	baseUrl := "https://pokeapi.co/api/v2/location-area/"
+	fullUrl := fmt.Sprintf("%s%s", baseUrl, additional)
+	if err := getRequest(fullUrl, &locDetailStruct, configP); err != nil {
+		return fmt.Errorf("failed when getting request: %w", err)
+	}
+
+	for _, pokemon := range locDetailStruct.PokemonEncounters {
+		fmt.Println(pokemon.Pokemon.Name)
 	}
 	return nil
 }
