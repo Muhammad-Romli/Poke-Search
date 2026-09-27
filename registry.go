@@ -49,6 +49,11 @@ func init() {
 			description: "Throw a pokeball to try to catch specified pokemon",
 			callback:    commandCatch,
 		},
+		"inspect": {
+			name:        "inspect",
+			description: "Inspect pokemon you already caught",
+			callback:    commandInspect,
+		},
 	}
 }
 
@@ -278,25 +283,26 @@ func commandInspect(configP *config, additional string) error {
 	fullUrl := fmt.Sprintf("%s%s", baseUrl, additional)
 	exist, err := getCachedData(fullUrl, &pokeStruct, configP)
 	if err != nil {
-		return fmt.Errorf("Error when getting cached data for caught pokemon")
+		return fmt.Errorf("Error when getting cached data for caught pokemon\n")
 	}
 	if !exist {
-		fmt.Printf("You haven't caught this pokemon yet recently")
+		fmt.Printf("you have not caught that pokemon\n")
+		return nil
 	}
 
 	fmt.Printf(`
-	Name: %s
+Name: %s
 Height: %d
 Weight: %d
 `, pokeStruct.Name, pokeStruct.Height, pokeStruct.Weight)
 
 	fmt.Printf("Stats:")
 	for _, s := range pokeStruct.Stats {
-		fmt.Printf("  -%s: %d", s.Stat.Name, s.BaseStat)
+		fmt.Printf("  -%s: %d\n", s.Stat.Name, s.BaseStat)
 	}
-	fmt.Printf("Types:")
+	fmt.Printf("Types:\n")
 	for _, t := range pokeStruct.Types {
-		fmt.Printf("  - %s", t.Type.Name)
+		fmt.Printf("  - %s\n", t.Type.Name)
 	}
 
 	return nil
