@@ -1,43 +1,42 @@
-# --- OS / Editor ---
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-*.swp
-*.swo
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/bin/
+/out/
 
-# --- Environment / Secrets ---
+# Test binaries and coverage
+*.test
+*.out
+coverage.txt
+coverage.html
+*.prof
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Vendor directory (remove this line if you commit vendor/)
+vendor/
+
+# Environment and secrets
 .env
 .env.*
 !.env.example
-*.pem
-*.key
 
-# --- Python ---
-__pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-env/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-dist/
-build/
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# --- Go ---
-bin/
-*.exe
-*.test
-*.out
-vendor/
+# OS files
+.DS_Store
+Thumbs.db
 
-# --- Logs / Temp ---
+# Logs and temp
 *.log
 tmp/
-*.tmp
-
-# --- Databases (local) ---
-*.sqlite3
-*.db
