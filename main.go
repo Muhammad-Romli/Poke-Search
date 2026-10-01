@@ -16,8 +16,9 @@ type config struct {
 
 func main() {
 	cfg := &config{
-		cache:    *pokecache.NewCache(60 * time.Second),
+		cache:    *pokecache.NewCache(IntervalTimer * time.Second),
 		commands: AllCommands,
 	}
 	startRepl(cfg)
 }
+
